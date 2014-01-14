@@ -14,8 +14,8 @@ if (!is_admin())
 	return;
 }
 
-define('DEFAULT_QRCODE_SIZE', 100);
-define('DEFAULT_FILENAME', 'qrcode.pdf');
+define('QRPDF_QRCODE_SIZE', 100);
+define('QRPDF_FILENAME', 'qrcode');
 define('QRPDF_PATH', dirname(__FILE__));
 
 add_action('add_meta_boxes', function()
@@ -35,6 +35,12 @@ add_action('init', function()
 	}
 });
 
+add_action('admin_menu', function()
+{
+	add_options_page(__('QR PDF Configuration', 'qr-pdf'), __('QR PDF'),
+		'manage-options', 'qr-pdf', 'qrpdfOptions');
+});
+
 function qrpdfAddMetaBox()
 {
 	global $post;
@@ -50,15 +56,42 @@ function qrpdfGeneratePDF($post)
 	$link = get_permalink($post);
 	if ($link !== false)
 	{
+		$size = get_option('qr-pdf-size', QRPDF_QRCODE_SIZE);
+		$filename = get_option('qr-pdf-filename', QRPDF_FILENAME) . '.pdf';
+
 		$pdf = new TCPDF();
 		$pdf->setPrintHeader(false);
 		$pdf->setPrintFooter(false);
 		$pdf->AddPage();
-		$pdf->write2DBarcode($link,
-				'QRCODE,H', '', '', DEFAULT_QRCODE_SIZE, DEFAULT_QRCODE_SIZE);
-		$pdf->Output(DEFAULT_FILENAME);
+		$pdf->write2DBarcode($link, 'QRCODE,H', '', '', $size, $size);
+		$pdf->Output($filename);
 		die;
 	}
+}
+
+function qrpdfOptions()
+{
+	if (!empty($_POST))
+	{
+		qrpdfSaveOptions();
+	}
+
+	$size = get_option('qr-pdf-size', QRPDF_QRCODE_SIZE);
+	$filename = get_option('qr-pdf-filename', QRPDF_FILENAME);
+
+	require QRPDF_PATH . DIRECTORY_SEPARATOR . 'views'
+		. DIRECTORY_SEPARATOR . 'options.php';
+}
+
+function qrpdfSaveOptions()
+{
+	$size = (array_key_exists('size', $_POST) && is_numeric($_POST['size'])?
+			max((int) $_POST['size'], 1) : QRPDF_QRCODE_SIZE);
+	$filename = (!empty($_POST['filename'])? $_POST['filename'] :
+			QRPDF_FILENAME);
+
+	update_option('qr-pdf-size', $size);
+	update_option('qr-pdf-filename', $filename);
 }
 
 ?>
