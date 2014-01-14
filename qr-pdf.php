@@ -16,6 +16,7 @@ if (!is_admin())
 
 define('DEFAULT_QRCODE_SIZE', 100);
 define('DEFAULT_FILENAME', 'qrcode.pdf');
+define('QRPDF_PATH', dirname(__FILE__));
 
 add_action('add_meta_boxes', function()
 {
@@ -37,15 +38,9 @@ add_action('init', function()
 function qrpdfAddMetaBox()
 {
 	global $post;
-	?>
 
-	<form method="post" id="qr-pdf-form">
-		<input type="hidden" name="qr-pdf-post" value="<?php echo $post->ID; ?>">
-		<input type="submit"
-			value="<?php _e('Generate QR Code with link', 'qr-pdf'); ?>">
-	</form>
-
-	<?php
+	require QRPDF_PATH . DIRECTORY_SEPARATOR . 'views'
+		. DIRECTORY_SEPARATOR . 'metabox.php';
 }
 
 function qrpdfGeneratePDF($post)
