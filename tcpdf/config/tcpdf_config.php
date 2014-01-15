@@ -201,7 +201,7 @@ define('K_SMALL_RATIO', 2/3);
 /**
  * Set to true to enable the special procedure used to avoid the overlappind of symbols on Thai language.
  */
-define('K_THAI_TOPCHARS', true);
+define('K_THAI_TOPCHARS', false);
 
 /**
  * If true allows to call TCPDF methods using HTML syntax

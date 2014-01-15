@@ -62,7 +62,8 @@ function qrpdfGeneratePDF($post)
 		$format = get_option('qr-pdf-format', QRPDF_FORMAT);
 
 		/* QR Codes are squares, orientation doesn't matter */
-		$pdf = new TCPDF('P', 'mm', $format);
+		$pdf = new TCPDF('P', 'mm', $format, false, 'ISO-8859-1');
+		$pdf->setFontSubsetting(false);
 		$pdf->setPrintHeader(false);
 		$pdf->setPrintFooter(false);
 		$pdf->AddPage();
