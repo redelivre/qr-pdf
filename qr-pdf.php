@@ -17,6 +17,7 @@ if (!is_admin())
 define('QRPDF_QRCODE_SIZE', 100);
 define('QRPDF_FILENAME', 'qrcode');
 define('QRPDF_PATH', dirname(__FILE__));
+define('QRPDF_FORMAT', 'A4');
 
 add_action('add_meta_boxes', function()
 {
@@ -58,8 +59,10 @@ function qrpdfGeneratePDF($post)
 	{
 		$size = get_option('qr-pdf-size', QRPDF_QRCODE_SIZE);
 		$filename = get_option('qr-pdf-filename', QRPDF_FILENAME) . '.pdf';
+		$format = get_option('qr-pdf-format', QRPDF_FORMAT);
 
-		$pdf = new TCPDF();
+		/* QR Codes are squares, orientation doesn't matter */
+		$pdf = new TCPDF('P', 'mm', $format);
 		$pdf->setPrintHeader(false);
 		$pdf->setPrintFooter(false);
 		$pdf->AddPage();
@@ -78,6 +81,8 @@ function qrpdfOptions()
 
 	$size = get_option('qr-pdf-size', QRPDF_QRCODE_SIZE);
 	$filename = get_option('qr-pdf-filename', QRPDF_FILENAME);
+	$format = get_option('qr-pdf-format', QRPDF_FORMAT);
+	require QRPDF_PATH . DIRECTORY_SEPARATOR . 'formats.php';
 
 	require QRPDF_PATH . DIRECTORY_SEPARATOR . 'views'
 		. DIRECTORY_SEPARATOR . 'options.php';
@@ -85,13 +90,19 @@ function qrpdfOptions()
 
 function qrpdfSaveOptions()
 {
+	require QRPDF_PATH . DIRECTORY_SEPARATOR . 'formats.php';
+
 	$size = (array_key_exists('size', $_POST) && is_numeric($_POST['size'])?
 			max((int) $_POST['size'], 1) : QRPDF_QRCODE_SIZE);
 	$filename = (!empty($_POST['filename'])? $_POST['filename'] :
 			QRPDF_FILENAME);
+	$format = (!empty($_POST['format'])
+			&& array_key_exists($_POST['format'], $pageFormats)?
+			$_POST['format'] : QRPDF_FORMAT);
 
 	update_option('qr-pdf-size', $size);
 	update_option('qr-pdf-filename', $filename);
+	update_option('qr-pdf-format', $format);
 }
 
 ?>
