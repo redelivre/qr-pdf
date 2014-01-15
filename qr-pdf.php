@@ -21,7 +21,9 @@ define('QRPDF_FORMAT', 'A4');
 
 add_action('add_meta_boxes', function()
 {
-	foreach (get_post_types() as $type)
+	$types = get_post_types();
+	$types['link'] = 'link';
+	foreach ($types as $type)
 	{
 		add_meta_box('qr-pdf-meta-box', 'QR PDF', 'qrpdfAddMetaBox', $type,
 			'side');
@@ -45,32 +47,43 @@ add_action('admin_menu', function()
 function qrpdfAddMetaBox()
 {
 	global $post;
+	global $link;
+
+	$url = null;
+
+	/* Posts */
+	if (isset($post))
+	{
+		$url = get_permalink($post);
+	}
+	/* Links */
+	else if (isset($link))
+	{
+		$url = $link->link_url;
+	}
 
 	require QRPDF_PATH . DIRECTORY_SEPARATOR . 'views'
 		. DIRECTORY_SEPARATOR . 'metabox.php';
 }
 
-function qrpdfGeneratePDF($post)
+function qrpdfGeneratePDF($url)
 {
 	require_once 'tcpdf/tcpdf.php';
 
-	$link = get_permalink($post);
-	if ($link !== false)
-	{
-		$size = get_option('qr-pdf-size', QRPDF_QRCODE_SIZE);
-		$filename = get_option('qr-pdf-filename', QRPDF_FILENAME) . '.pdf';
-		$format = get_option('qr-pdf-format', QRPDF_FORMAT);
+	$size = get_option('qr-pdf-size', QRPDF_QRCODE_SIZE);
+	$filename = get_option('qr-pdf-filename', QRPDF_FILENAME) . '.pdf';
+	$format = get_option('qr-pdf-format', QRPDF_FORMAT);
 
-		/* QR Codes are squares, orientation doesn't matter */
-		$pdf = new TCPDF('P', 'mm', $format, false, 'ISO-8859-1');
-		$pdf->setFontSubsetting(false);
-		$pdf->setPrintHeader(false);
-		$pdf->setPrintFooter(false);
-		$pdf->AddPage();
-		$pdf->write2DBarcode($link, 'QRCODE,H', '', '', $size, $size);
-		$pdf->Output($filename);
-		die;
-	}
+	/* QR Codes are squares, orientation doesn't matter */
+	$pdf = new TCPDF('P', 'mm', $format, false, 'ISO-8859-1');
+	$pdf->setFontSubsetting(false);
+	$pdf->setPrintHeader(false);
+	$pdf->setPrintFooter(false);
+	$pdf->AddPage();
+	$pdf->write2DBarcode($url, 'QRCODE,H', '', '', $size, $size);
+	$pdf->Output($filename);
+
+	die;
 }
 
 function qrpdfOptions()
