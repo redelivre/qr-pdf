@@ -128,6 +128,7 @@ function qrpdfGeneratePDF($urls)
 	$size = get_option('qr-pdf-size', QRPDF_QRCODE_SIZE);
 	$filename = get_option('qr-pdf-filename', QRPDF_FILENAME) . '.pdf';
 	$format = get_option('qr-pdf-format', QRPDF_FORMAT);
+	$gap = get_option('qr-pdf-gap', QRPDF_GAP);
 
 	/* QR Codes are squares, orientation doesn't matter */
 	$pdf = new TCPDF('P', 'mm', $format, false, 'ISO-8859-1');
@@ -146,7 +147,7 @@ function qrpdfGeneratePDF($urls)
 	{
 		if ($x + $size > $width)
 		{
-			$y += $size + QRPDF_GAP;
+			$y += $size + $gap;
 			$x = $margins['left'];
 		}
 		if ($y + $size > $height)
@@ -155,7 +156,7 @@ function qrpdfGeneratePDF($urls)
 			$pdf->AddPage();
 		}
 		$pdf->write2DBarcode($url, 'QRCODE,H', $x, $y, $size, $size);
-		$x += $size + QRPDF_GAP;
+		$x += $size + $gap;
 	}
 	$pdf->Output($filename);
 
@@ -172,6 +173,7 @@ function qrpdfOptions()
 	$size = get_option('qr-pdf-size', QRPDF_QRCODE_SIZE);
 	$filename = get_option('qr-pdf-filename', QRPDF_FILENAME);
 	$format = get_option('qr-pdf-format', QRPDF_FORMAT);
+	$gap = get_option('qr-pdf-gap', QRPDF_GAP);
 	require QRPDF_PATH . DIRECTORY_SEPARATOR . 'formats.php';
 
 	require QRPDF_PATH . DIRECTORY_SEPARATOR . 'views'
@@ -189,10 +191,13 @@ function qrpdfSaveOptions()
 	$format = (!empty($_POST['format'])
 			&& array_key_exists($_POST['format'], $pageFormats)?
 			$_POST['format'] : QRPDF_FORMAT);
+	$gap = (array_key_exists('gap', $_POST) && is_numeric($_POST['gap'])?
+			max((int) $_POST['gap'], 0) : QRPDF_QRCODE_GAP);
 
 	update_option('qr-pdf-size', $size);
 	update_option('qr-pdf-filename', $filename);
 	update_option('qr-pdf-format', $format);
+	update_option('qr-pdf-gap', $gap);
 }
 
 ?>

@@ -21,5 +21,9 @@
 		?>
 	</select>
 	<br>
+	<span><?php _e('Gap between QR codes when doing bulk generation (in mm):',
+			'qr-pdf'); ?></span>
+	<input type="text" name="gap" value="<?php echo $gap; ?>">
+	<br>
 	<input type="submit" value="<?php _e('Save', 'qr-pdf'); ?>">
 </form>
