@@ -18,6 +18,7 @@ define('QRPDF_QRCODE_SIZE', 100);
 define('QRPDF_FILENAME', 'qrcode');
 define('QRPDF_PATH', dirname(__FILE__));
 define('QRPDF_FORMAT', 'A4');
+define('QRPDF_GAP', 5);
 
 add_action('add_meta_boxes', function()
 {
@@ -30,20 +31,73 @@ add_action('add_meta_boxes', function()
 	}
 });
 
-add_action('admin_init', function()
-{
-	if (array_key_exists('qr-pdf-post', $_POST)
-		&& array_key_exists('qr-pdf-submit', $_POST))
-	{
-		qrpdfGeneratePDF($_POST['qr-pdf-post']);
-	}
-});
-
 add_action('admin_menu', function()
 {
 	add_options_page(__('QR PDF Configuration', 'qr-pdf'), __('QR PDF'),
 		'manage-options', 'qr-pdf', 'qrpdfOptions');
 });
+
+/* The bulk action hook won't allow us to add action */
+add_action('admin_footer', function()
+{
+	?>
+		<script type="text/javascript">
+			jQuery(document).ready(function()
+			{
+				var select = jQuery('select[name="action2"]');
+				if (select.length)
+				{
+					var option = jQuery('<option>').appendTo(select);
+					option.val('qrcode');
+					option.text('<?php _e('Generate QR code', 'qr-pdf'); ?>');
+				}
+			});
+		</script>
+	<?php
+});
+
+add_action('load-edit.php', 'qrpdfHandleForms');
+add_action('load-link-manager.php', 'qrpdfHandleForms');
+add_action('load-link.php', 'qrpdfHandleForms');
+
+function qrpdfHandleForms()
+{
+	/* Single QR code */
+	if (array_key_exists('qr-pdf-post', $_POST)
+		&& array_key_exists('qr-pdf-submit', $_POST))
+	{
+		qrpdfGeneratePDF(array($_POST['qr-pdf-post']));
+	}
+	/* More than one */
+	else if (array_key_exists('action2', $_GET)
+			&& $_GET['action2'] == 'qrcode')
+	{
+		$urls = array();
+		if (array_key_exists('post', $_GET) && is_array($_GET['post']))
+		{
+			foreach ($_GET['post'] as $post)
+			{
+				$url = get_permalink($post);
+				if ($url !== false)
+				{
+					$urls[] = $url;
+				}
+			}
+		}
+		if (array_key_exists('linkcheck', $_GET) && is_array($_GET['linkcheck']))
+		{
+			foreach ($_GET['linkcheck'] as $link)
+			{
+				$bookmark = get_bookmark($link);
+				if ($bookmark !== null)
+				{
+					$urls[] = $bookmark->link_url;
+				}
+			}
+		}
+		qrpdfGeneratePDF($urls);
+	}
+}
 
 function qrpdfAddMetaBox()
 {
@@ -67,7 +121,7 @@ function qrpdfAddMetaBox()
 		. DIRECTORY_SEPARATOR . 'metabox.php';
 }
 
-function qrpdfGeneratePDF($url)
+function qrpdfGeneratePDF($urls)
 {
 	require_once 'tcpdf/tcpdf.php';
 
@@ -80,8 +134,29 @@ function qrpdfGeneratePDF($url)
 	$pdf->setFontSubsetting(false);
 	$pdf->setPrintHeader(false);
 	$pdf->setPrintFooter(false);
-	$pdf->AddPage();
-	$pdf->write2DBarcode($url, 'QRCODE,H', '', '', $size, $size);
+
+	$dimensions = $pdf->getPageDimensions();
+	$margins = $pdf->getMargins();
+	$width = $dimensions['wk'] - $margins['right'];
+	$height = $dimensions['hk'] - $margins['bottom'];
+	$x = $width;
+	$y = $height;
+
+	foreach ($urls as $url)
+	{
+		if ($x + $size > $width)
+		{
+			$y += $size + QRPDF_GAP;
+			$x = $margins['left'];
+		}
+		if ($y + $size > $height)
+		{
+			$y = $margins['top'];
+			$pdf->AddPage();
+		}
+		$pdf->write2DBarcode($url, 'QRCODE,H', $x, $y, $size, $size);
+		$x += $size + QRPDF_GAP;
+	}
 	$pdf->Output($filename);
 
 	die;
