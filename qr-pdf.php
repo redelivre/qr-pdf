@@ -30,7 +30,7 @@ add_action('add_meta_boxes', function()
 	}
 });
 
-add_action('init', function()
+add_action('admin_init', function()
 {
 	if (array_key_exists('qr-pdf-post', $_POST)
 		&& array_key_exists('qr-pdf-submit', $_POST))
