@@ -4,6 +4,9 @@ QR PDF Wordpress Plugin
 QR PDF adds a button to the post and link editing pages to generate a
 ready-to-print PDF file containing a QR Code linking to them.
 
+![GitHub](https://img.shields.io/github/license/redelivre/qr-pdf.svg)
+[![chatroom icon](https://patrolavia.github.io/telegram-badge/chat.png)](https://t.me/joinchat/AHZmBhAkX_efR9za0V_J1A)
+
 Instalation
 -----------
 
